@@ -833,7 +833,24 @@ public class Socket: SocketReader, SocketWriter {
 	///
 	/// The file descriptor representing this socket. (Readonly)
 	///
-	public internal(set) var socketfd: Int32 = SOCKET_INVALID_DESCRIPTOR
+    public internal(set) var socketfd: Int32 {
+        get {
+            self.socketfdSemaphore.wait()
+            defer {
+                self.socketfdSemaphore.signal()
+            }
+            return self._socketfd
+        }
+        set {
+            self.socketfdSemaphore.wait()
+            defer {
+                self.socketfdSemaphore.signal()
+            }
+            self._socketfd = newValue
+        }
+    }
+    private var _socketfd: Int32 = SOCKET_INVALID_DESCRIPTOR
+    private var socketfdSemaphore = DispatchSemaphore(value: 1)
 
 	///
 	/// The signature for the socket. (Readonly)
