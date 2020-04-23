@@ -900,7 +900,24 @@ public class Socket: SocketReader, SocketWriter {
 	///
 	/// `True` if this socket is connected. `False` otherwise. (Readonly)
 	///
-	public internal(set) var isConnected: Bool = false
+    public internal(set) var isConnected: Bool {
+        get {
+            self.isConnectedSemaphore.wait()
+            defer {
+                self.isConnectedSemaphore.signal()
+            }
+            return self._isConnected
+        }
+        set {
+            self.isConnectedSemaphore.wait()
+            defer {
+                self.isConnectedSemaphore.signal()
+            }
+            self._isConnected = newValue
+        }
+    }
+    private var _isConnected: Bool = false
+    private var isConnectedSemaphore = DispatchSemaphore(value: 1)
 
 	///
 	/// `True` if this socket is blocking. `False` otherwise. (Readonly)
