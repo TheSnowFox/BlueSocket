@@ -944,7 +944,24 @@ public class Socket: SocketReader, SocketWriter {
 	///
 	/// `True` if this socket is listening. `False` otherwise. (Readonly)
 	///
-	public internal(set) var isListening: Bool = false
+    public internal(set) var isListening: Bool {
+        get {
+            self.isListeningSemaphore.wait()
+            defer {
+                self.isListeningSemaphore.signal()
+            }
+            return self._isListening
+        }
+        set {
+            self.isListeningSemaphore.wait()
+            defer {
+                self.isListeningSemaphore.signal()
+            }
+            self._isListening = newValue
+        }
+    }
+    private var _isListening: Bool = false
+    private var isListeningSemaphore = DispatchSemaphore(value: 1)
 
 	///
 	/// `True` if this socket's remote connection has closed. (Readonly)
